@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include<iostream>
+#include <iostream>
 #include<fstream>
 #include<sstream>
 using namespace std;
@@ -57,7 +57,7 @@ void tokenize(const char* input) {
 
 int main() {
     const char* input;
-    ifstream f("Untitledk.txt"); //taking file as inputstream
+    ifstream f("input.txt"); //taking file as inputstream
     string str;
     if(f) {
         ostringstream ss;
