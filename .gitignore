@@ -1,4 +1,4 @@
-./sic/*.txt
+**/sic/*.txt
 *.obj
 *.pdb
 *.ilk
