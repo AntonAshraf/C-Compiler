@@ -3,34 +3,52 @@
 #include <stdlib.h>
 #include <string.h>
 
-int PASS1();
+int PASS1(const char *programFileName);
 int PASS2();
+void cleanFiles();
 
-/*struct OPTAB
+
+int main(int argc, char *argv[])
 {
-	char mnemonic[8];
-	int opcode;
-}optab;*/
-	
-int main()
-{
-    PASS1();
+    const char *programFileName;
+
+    if (argc >= 2)
+    {
+        programFileName = argv[1];
+    }
+    else
+    {
+        printf("Usage: %s <program_file> (Using Default \"TestProg1.asm\")\n", argv[0]);
+        programFileName = "TestProg1.asm";
+    }
+
+    
+
+    PASS1(programFileName);
     PASS2();
+
+    // Check for an additional argument to clean files
+    if (argc == 3 && strcmp(argv[2], "--clean") == 0)
+    {
+        cleanFiles();
+    }
+
     return 0;
 }
 
-int PASS1()
+
+int PASS1(const char *programFileName)
 {
 	char buffer[64],label[12],mnemonic[8],operand[12],mnem[8],op[2],symbol[12];
 	int start=0X0, locctr=0X0, ret, flag=0, address=0X0, j, program_length=0X0, count=0X0;
 	FILE *fProg,*fSymtab, *fOptab, *fIntrm, *fLength;
 	
-	fProg = fopen("SIC_program.txt","r");
+	fProg = fopen(programFileName,"r");
 	if(fProg == NULL){printf("Source file missing!!"); return 0;}
 	
 	fSymtab = fopen("SYMTAB.txt","w+");
 	
-	fOptab = fopen("OPTAB.txt","r");
+	fOptab = fopen("OPTAB.instr","r");
 	if(fOptab == NULL){printf("OPTAB missing!!"); return 0;}
 		
 	fIntrm = fopen("Intermediate_File.txt","w");
@@ -190,7 +208,7 @@ int PASS2()
 	if(fIntrm == NULL){printf("\nIntermediate file missing!"); return 0;}
     fSymtab=fopen("SYMTAB.txt","r");
     if(fSymtab == NULL){printf("\nSYMTAB missing!"); return 0;}
-    fOptab=fopen("OPTAB.txt","r");
+    fOptab=fopen("OPTAB.instr","r");
     if(fOptab == NULL){printf("\nOPTAB missing!"); return 0;}
     fLength=fopen("Program Length.txt","r");
     if(fLength == NULL){printf("\nProgram_length file missing!"); return 0;}
@@ -358,4 +376,13 @@ int PASS2()
 	fclose(fLength);
 	fclose(fobj);
 	return 1;
+}
+
+void cleanFiles()
+{
+    remove("Intermediate_File.txt");
+    remove("SYMTAB.txt");
+    remove("OPTAB.instr");
+    remove("Program Length.txt");
+    printf("Cleaned extra files.\n");
 }
