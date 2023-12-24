@@ -7,59 +7,54 @@ int PASS1(const char *programFileName);
 int PASS2();
 void cleanFiles();
 
-
 int main(int argc, char *argv[])
 {
-    const char *programFileName;
+	const char *programFileName;
 
-    if (argc >= 2)
-    {
-        programFileName = argv[1];
-    }
-    else
-    {
-        printf("Usage: %s <program_file> (Using Default \"TestProg1.asm\")\n", argv[0]);
-        programFileName = "TestProg1.asm";
-    }
+	if (argc >= 2)
+	{
+		programFileName = argv[1];
+	}
+	else
+	{
+		printf("\nUsage: %s <program_file> (Using Default \"Program1.asm\")\n", argv[0]);
+		programFileName = "Program1.asm";
+	}
 
-    
+	PASS1(programFileName);
 
-    PASS1(programFileName);
-    PASS2();
+	PASS2();
 
-    // Check for an additional argument to clean files
-    if (argc == 3 && strcmp(argv[2], "--clean") == 0)
-    {
-        cleanFiles();
-    }
+		if (argc == 3 && strcmp(argv[2], "--clean") == 0)
+	{
+		cleanFiles();
+	}
 
-    return 0;
+	return 0;
 }
-
 
 int PASS1(const char *programFileName)
 {
-	char buffer[64],label[12],mnemonic[8],operand[12],mnem[8],op[2],symbol[12];
+	char buffer[256],label[64],mnemonic[32],operand[64],mnem[32],op[64],symbol[64];
 	int start=0X0, locctr=0X0, ret, flag=0, address=0X0, j, program_length=0X0, count=0X0;
 	FILE *fProg,*fSymtab, *fOptab, *fIntrm, *fLength;
 	
 	fProg = fopen(programFileName,"r");
-	if(fProg == NULL){printf("Source file missing!!"); return 0;}
+	if(fProg == NULL){printf("Source file missing!!"); return 1;}
 	
 	fSymtab = fopen("SYMTAB.txt","w+");
 	
-	fOptab = fopen("OPTAB.instr","r");
-	if(fOptab == NULL){printf("OPTAB missing!!"); return 0;}
+	fOptab = fopen("OPTable.instr","r");
+	if(fOptab == NULL){printf("OPTAB missing!!"); return 1;}
 		
 	fIntrm = fopen("Intermediate_File.txt","w");
 	
-	fgets(buffer,64,fProg);
+	fgets(buffer,256,fProg);
 	sscanf(buffer,"%s %s %s",label,mnemonic,operand);
 	
 	if(strcmp(mnemonic,"START")==0)
 	{
-		locctr = atoi(operand);	//save operand as starting address
-		while(locctr > 0)
+		locctr = atoi(operand);			while(locctr > 0)
 		{
 			start = start + (locctr%10)*pow(16,count);
 			locctr = locctr/10;
@@ -75,11 +70,10 @@ int PASS1(const char *programFileName)
 	
 	while(!feof(fProg))
 	{
-		fgets(buffer,64,fProg);
+		fgets(buffer,256,fProg);
 		ret = sscanf(buffer,"%s%s%s",label,mnemonic,operand);
 
-		if(label[0] != ';' && label[0] != '.')	//not a comment line
-		{	
+		if(label[0] != ';' && label[0] != '.')			{	
 			if(ret == 1)
 			{
 				strcpy(mnemonic,label);
@@ -91,8 +85,7 @@ int PASS1(const char *programFileName)
 				strcpy(mnemonic,label);
 				fprintf(fIntrm,"%X\t\t%s\t%s\n",locctr,mnemonic,operand);
 			}
-			if(ret == 3) //there is a symbol in the Label field
-			{
+			if(ret == 3) 			{
 				rewind(fSymtab);		
 				while(!feof(fSymtab))
 				{
@@ -100,22 +93,19 @@ int PASS1(const char *programFileName)
 					fscanf(fSymtab,"%s%X",symbol,&address);
 					if(strcmp(label,symbol)==0)
 					{
-						flag = 1;	//duplicate symbol found
-						printf("\nDuplicate LABEL found: %s",label);
-						return 0;
+						flag = 1;							printf("\nDuplicate LABEL found: %s",label);
+						return 1;
 					}
 				}					
 				
-				if(flag == 0)	//no duplicate symbol
-				{
+				if(flag == 0)					{
 					fprintf(fSymtab,"%s\t%X\n",label,locctr);
 					fprintf(fIntrm,"%X\t%s\t%s\t%s\n",locctr,label,mnemonic,operand);
 				}
 			}
 			
 			rewind(fOptab);
-			while(!feof(fOptab))	//search optab for OPCODE
-			{
+			while(!feof(fOptab))				{
 				fscanf(fOptab,"%s%s",mnem,&op);
 				if(strcmp(mnemonic,mnem)==0)
 				{
@@ -152,8 +142,7 @@ int PASS1(const char *programFileName)
 					}
 					else if(strcmp(mnemonic,"BYTE")==0 && operand[0] =='C')
 					{
-						locctr += j-3;	//-3 is done to account for C' '
-						flag = 0;
+						locctr += j-3;							flag = 0;
 						break;
 					}
 					else if(strcmp(mnemonic,"BYTE")==0 && operand[0] =='X')
@@ -174,7 +163,7 @@ int PASS1(const char *programFileName)
 				{
 					printf("\n%s not present in OPTAB!",mnemonic);
 					printf("\nExiting ...");
-					return 0;
+					return 1;
 				}
 			}
 		}
@@ -194,24 +183,24 @@ int PASS1(const char *programFileName)
 	fclose(fOptab);
 	fclose(fIntrm);
 	fclose(fLength);
-	return 1;
+	return 0;
 } 
 
 int PASS2()
 {
 	int locctr=0X0, start=0X0, sa=0X0, program_length=0X0, ret, op_status = 0, address=0X0, target=0X0, ascii=0X0, temp1=0X0, j, k, count=0X0, record_len=0X0;
-	char label[12], mnemonic[8], operand[12], buffer[64], mnem[8], op[2], symbol[12], opcode[2], cons[8];
+	char label[64], mnemonic[32], operand[64], buffer[256], mnem[32], op[2], symbol[64], opcode[64], cons[32];
 	long int aseek,bseek;
 	FILE *fIntrm, *fSymtab, *fOptab, *fLength, *fobj;
 	
 	fIntrm = fopen("Intermediate_File.txt","r");
-	if(fIntrm == NULL){printf("\nIntermediate file missing!"); return 0;}
+	if(fIntrm == NULL){printf("\nIntermediate file missing!"); return 1;}
     fSymtab=fopen("SYMTAB.txt","r");
-    if(fSymtab == NULL){printf("\nSYMTAB missing!"); return 0;}
-    fOptab=fopen("OPTAB.instr","r");
-    if(fOptab == NULL){printf("\nOPTAB missing!"); return 0;}
+    if(fSymtab == NULL){printf("\nSYMTAB missing!"); return 1;}
+    fOptab=fopen("OPTable.instr","r");
+    if(fOptab == NULL){printf("\nOPTAB missing!"); return 1;}
     fLength=fopen("Program Length.txt","r");
-    if(fLength == NULL){printf("\nProgram_length file missing!"); return 0;}
+    if(fLength == NULL){printf("\nProgram_length file missing!"); return 1;}
     fobj = fopen("Object_Program.txt","w");
     
     fscanf(fIntrm,"%X%s%s%s",&locctr,label,mnemonic,operand);
@@ -224,27 +213,23 @@ int PASS2()
     	bseek = ftell(fobj);
 	}
 	    
-    fgets(buffer,64,fIntrm);
+    fgets(buffer,256,fIntrm);
 	while(!feof(fIntrm))
 	{
-		fgets(buffer,64,fIntrm);
-		//printf("\tbuffer=%s",buffer);
-		ret = sscanf(buffer,"%X%s%s%s",&locctr,label,mnemonic,operand);
+		fgets(buffer,256,fIntrm);
+				ret = sscanf(buffer,"%X%s%s%s",&locctr,label,mnemonic,operand);
 
-		if(ret == 2) //in case of RSUB
-		{
+		if(ret == 2) 		{
 			strcpy(mnemonic,label);
 		}
-		else if(ret == 3)	//label not present
-		{
+		else if(ret == 3)			{
 			strcpy(operand,mnemonic);
 			strcpy(mnemonic,label);
 		}
 		else
 		{}
 
-		if(count >= 0X3C || strcmp(mnemonic,"RESB")==0 || strcmp(mnemonic,"RESW")==0 || strcmp(mnemonic,"END")==0)	//0X3C is hex equivalent of 60
-		{
+		if(count >= 0X3C || strcmp(mnemonic,"RESB")==0 || strcmp(mnemonic,"RESW")==0 || strcmp(mnemonic,"END")==0)			{
 			aseek = ftell(fobj);
 			fseek(fobj,-(aseek-bseek)-3L,1);
 			record_len = count/0X2;
@@ -267,8 +252,7 @@ int PASS2()
 		op_status = 0;
 		while(!feof(fOptab))
 		{
-			//printf("Insideoptabwhileloop.\t");	
-			fscanf(fOptab,"%s%s",mnem,op);
+						fscanf(fOptab,"%s%s",mnem,op);
 			if(strcmp(mnemonic,mnem)==0)
 			{
 				strcpy(opcode,op);
@@ -277,8 +261,7 @@ int PASS2()
 			}
 		}
 		j = strlen(operand);
-		//printf("op_status=%d\tmnemonic=%s",op_status,mnemonic);
-		if(op_status == 1 && operand[j-1]=='X' && operand[j-2]==',')
+				if(op_status == 1 && operand[j-1]=='X' && operand[j-2]==',')
 		{
 			printf("CondnforBUFFER,X.");
 			
@@ -287,8 +270,7 @@ int PASS2()
 			fscanf(fSymtab,"%s%X",symbol,&address);
 			while(!feof(fSymtab))
 			{
-				//printf("InsideSymtab.\t");
-				fscanf(fSymtab,"%s%X",symbol,&address);
+								fscanf(fSymtab,"%s%X",symbol,&address);
 				if(strcmp(operand,symbol)==0)
 				{
 					target = address;
@@ -303,12 +285,10 @@ int PASS2()
 		
 		else if (op_status == 1 && strcmp(mnemonic,"RSUB")!=0)
 		{
-			//printf("MnemonicisnotRSUB.");
-			rewind(fSymtab);
+						rewind(fSymtab);
 			while(!feof(fSymtab))
 			{
-				//printf("Inside Symtab\t");
-				fscanf(fSymtab,"%s%X",symbol,&address);
+								fscanf(fSymtab,"%s%X",symbol,&address);
 				if(strcmp(operand,symbol)==0)
 				{
 					target = address;
@@ -322,15 +302,12 @@ int PASS2()
 		}
 		else if (op_status == 1 && strcmp(mnemonic,"RSUB")==0)
 		{
-			//printf("MnemonicisRSUB.");
-			fprintf(fobj,"%s0000^",opcode);
+						fprintf(fobj,"%s0000^",opcode);
 			count = count+0X6;
 			continue;
 		}
-		else	//In case mnemonic field is an assembly directive.
-		{
-			//printf("Assemblydirective.");
-			if((strcmp(mnemonic,"BYTE")==0) || ((strcmp(mnemonic,"BYTE")==0)))
+		else			{
+						if((strcmp(mnemonic,"BYTE")==0) || ((strcmp(mnemonic,"BYTE")==0)))
 			{
 				if(operand[0] == 'C')
 				{
@@ -343,8 +320,7 @@ int PASS2()
 					fprintf(fobj,"%6X^",ascii);
 					count = count+strlen(operand)-0X3;
 				}
-				else	//strcmp(operand[0] == 'X'
-				{
+				else					{
 					for(k=0;k<strlen(operand)-3;k++)
 					{
 						cons[k]=operand[k+2];
@@ -362,8 +338,7 @@ int PASS2()
 				count = count+0X6;
 				continue;
 			}
-			else	// in case of RESB or RESW
-			{
+			else				{
 				continue;
 			}
 		}
@@ -375,14 +350,13 @@ int PASS2()
 	fclose(fOptab);
 	fclose(fLength);
 	fclose(fobj);
-	return 1;
+	return 0;
 }
 
 void cleanFiles()
 {
-    remove("Intermediate_File.txt");
     remove("SYMTAB.txt");
-    remove("OPTAB.instr");
+    remove("Intermediate_File.txt");
     remove("Program Length.txt");
-    printf("Cleaned extra files.\n");
+    remove("Object_Program.txt");
 }
