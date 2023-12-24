@@ -18,6 +18,7 @@ void parseoperator(char *input, int depth);
 void parseStringLiteral(char *input, int depth);
 void parsenumOrIdentifier(char *input, int depth);
 
+using namespace std;
 
 int isWordCharacter(char c) {
     return isalpha(c) || c == '_';
@@ -73,8 +74,8 @@ void insertCharacters(char *input,char *result) {
         }
     }
     result[idx] = '\0';
-
-    printf("Modified String: %s\n", result);
+    
+    // printf("Modified String: %s\n", result);
 }
 
 // Function to print indentation based on recursion depth
@@ -92,7 +93,6 @@ void parseCFG(char *input, int depth) {
 void parseStatement(char *input, int depth) {
     printIndent(depth);
     printf("Statement\n");
-
     if (strstr(input, "while") == input) {
         parseWhileLoop(input, depth + 1);
     } else if (strstr(input, "printf") == input) {
@@ -185,12 +185,12 @@ void parseStatements(char *input, int depth) {
     // Assuming Statement Statements | Îµ
     char *statementDelimiter = strstr(input, ";");
     
-    //  printf("salma: %s\n", statementDelimiter+1);
+    
     if (statementDelimiter) {
         // Extracting the first Statement
         char statement[100];
         strncpy(statement, input, statementDelimiter - input);
-         printf("salma: %s\n", statement);
+    
         statement[statementDelimiter - input] = '\0';
 
         parseStatement(statement, depth + 1);
@@ -213,28 +213,53 @@ void parseStatements(char *input, int depth) {
 
 //     // Add more conditions based on your grammar rules
 // }
-
 void parseExpressionStatement(char *input, int depth) {
     printIndent(depth);
-    printf("ExpressionStatement\n");
-    printf("input of ExpressionStatement: %s",input);
-    // Assuming Identifiers operator1 Identifiers ';'
-    char *identifier1 = strstr(input,"i" );
-    char *operator1 = strstr(input, "++");
-    // char *identifier2 = strstr(input, "Identifier");
-    char *semicolon = strstr(input, ";");
+    printf("Expression Statement\n");
 
-    if (identifier1 && operator1) {
-        parseIdentifiers(identifier1, depth + 1);
-        parseoperator(operator1, depth + 1);
-        // parseIdentifiers(identifier2, depth + 1);
-        // Print the semicolon
-        printIndent(depth + 1);
-        // printf(";\n");
+    char *current = input;
+    while (*current != '\0') {
+        // printf("%s\n",current);
+        if (*current == 'i' || *current == 'n') {
+            char *start = current;
+            while (!ispunct(*current) && (isalnum(*current) || *current == '_')) {
+                current++;
+            }
+            int startsize = strlen(start);
+            int currentsize = strlen(current);
+            int len = startsize - currentsize;
+            string s = start;
+            s = s.substr(0,len);
+            char* send = new char[s.length() + 1];
+            strcpy(send, s.c_str());
+            
+            if (*start == 'i') {
+                parsenumOrIdentifier(send, depth + 1);
+                
+            } else {
+                parsenumOrIdentifier(start, depth + 1);
+            }
+        } else if (ispunct(*current)) {
+            char *operatorz = current;
+            while (*current != '\0' && ispunct(*current)) {
+                current++;
+            }
+            int startsize = strlen(operatorz);
+            int currentsize = strlen(current);
+            int len = startsize - currentsize;
+            string s = operatorz;
+            s = s.substr(0,len);
+            char* send = new char[s.length() + 1];
+            strcpy(send, s.c_str());
+            parseoperator(send, depth + 1);
+        } else {
+            current++;
+        }
     }
+}
 
     // Add more conditions based on your grammar rules
-}
+
 
 void parsePrintStatement(char *input, int depth) {
     printIndent(depth);
@@ -303,14 +328,35 @@ void parseStringLiteral(char *input, int depth) {
     printIndent(depth);
     printf("StringLiteral: %s\n", input);
 }
+void removeNewlines(char *str) {
+    if (str == NULL) {
+        return; // Handle null pointer
+    }
+
+    int length = strlen(str);
+    int readPos = 0;
+    int writePos = 0;
+
+    while (readPos < length) {
+        if (str[readPos] != '\n') {
+            str[writePos] = str[readPos];
+            writePos++;
+        }
+        readPos++;
+    }
+
+    str[writePos] = '\0'; // Null-terminate the new string
+}
 
 int main() {
-    char input[] = "while (5 >= p) { x= y+ 25;printf(\"hjhjj %s\",x);}";
+    char input[] = "while (ahmed < mohamed) {ahmed++;\nx=y* --z +2;printf(\"Mohamed\");i++;}";
     
     char result[200];
-insertCharacters(input, result);
-
-parseCFG(result, 0);
+    insertCharacters(input, result);
+    removeNewlines(result);
+    // printf("%s",result);
+    
+    parseCFG(result, 0);
 
     return 0;
 }
