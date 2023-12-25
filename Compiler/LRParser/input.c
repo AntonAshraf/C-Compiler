@@ -1,7 +1,6 @@
-
-while (x < 10)
+while (x <= 10)
 {
-    x--;
-    printf(" Hello everyone %d ", x);
+    x = 8 /x+ t;
+    printf (" Hello everyone %d ", x);
     x++;
 }

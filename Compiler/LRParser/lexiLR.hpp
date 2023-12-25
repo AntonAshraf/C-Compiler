@@ -164,12 +164,7 @@ string lexAndReplace(const string& input) {
                 tokens.push_back({currentType, token, start, i});
                 token.clear();
             }
-            if (i + 1 < input.size() && ((c == '+' && input[i + 1] == '+') || (c == '-' && input[i + 1] == '-'))) {
-                token = string(2, c);
-                currentType = (c == '+') ? TokenType::Increment : TokenType::Decrement;
-                ++i;
-                ++i;
-            } else {
+            if (c == '+' || c == '-' || c == '*' || c == '/' || c == '>' || c == '<' || c == '=') {
                 token = c;
                 currentType = TokenType::Operator;
             }
@@ -205,13 +200,7 @@ string lexAndReplace(const string& input) {
         if (token.type != TokenType::Increment && token.type != TokenType::Unknown && token.type != TokenType::Decrement) {
             output.replace(token.start + offset, token.end - token.start, replacement);
             offset += replacement.size() - (token.end - token.start);
-        } else if (token.type == TokenType::Increment) {
-            output.replace(token.start + offset, token.end - token.start, replacement);
-            offset += replacement.size() - (token.end - token.start);
-        }  else if (token.type == TokenType::Decrement) {
-            output.replace(token.start + offset, token.end - token.start, replacement);
-            offset += replacement.size() - (token.end - token.start);
-        }
+        } 
     }
 
     return output;

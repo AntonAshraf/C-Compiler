@@ -10,7 +10,6 @@ struct ProductionRule
 } Rules[100];
 
 int ReadRules();
-string reduce(string str);
 
 int main()
 {
@@ -28,7 +27,6 @@ int main()
     strcpy(tmp, output.c_str()); // Copying the content
 
     remove_whitespace(tmp, remove_space);
-    // string t = reduce(tmp);
     cout << tmp << '\n';
 
     char input[2000], stack[500], temp[500], ch[20], *token1, *token2, *substring;
@@ -47,10 +45,7 @@ int main()
         {
             printf("\nStack\tInput\tAction\n");
         }
-        // if(input[i] == ' '){
-        //     i++;
-        //     continue;
-        // }
+
         // If there are more characters in the input string, add the next character to the stack
         if (i < strlen(input))
         {
@@ -161,19 +156,4 @@ int ReadRules()
         printf("Rule %d: |%s| -> |%s|\n", i + 1, Rules[i].left, Rules[i].right);
     }
     return ruleIndex;
-}
-
-string reduce(string str){
-    // if ++ or -- is found, replace it with Increment or Decrement
-    size_t pos;
-    // Replace "++" with "Increment"
-    while ((pos = str.find("++")) != std::string::npos) {
-        str.replace(pos, 2, "Increment");
-    }
-    // Replace "--" with "Decrement"
-    while ((pos = str.find("--")) != std::string::npos) {
-        str.replace(pos, 2, "Decrement");
-    }
-    return str;
-    
 }
