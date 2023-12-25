@@ -19,12 +19,12 @@ enum class TokenType {
 };
 
 map<TokenType, string> tokenNames = {
-    {TokenType::Identifier, "Identifier"},
-    {TokenType::Number, "Number"},
+    {TokenType::Identifier, "Id"},
+    {TokenType::Number, "Num"},
     {TokenType::KeywordWhile, "KeywordWhile"},
     {TokenType::KeywordPrintf, "KeywordPrintf"},
-    {TokenType::StringLiteral, "StringLiteral"},
-    {TokenType::Operator, "Operator"},
+    {TokenType::StringLiteral, "String"},
+    {TokenType::Operator, "Op"},
     {TokenType::Increment, "Increment"},
     {TokenType::Decrement, "Decrement"},
     {TokenType::Unknown, "Unknown"}
