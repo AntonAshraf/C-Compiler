@@ -313,6 +313,7 @@ void parseStatements(char *input, int depth)
 
     // Assuming Statement Statements | Îµ
     char *statementDelimiter = strstr(input, ";");
+ 
 
     if (statementDelimiter)
     {
@@ -327,10 +328,7 @@ void parseStatements(char *input, int depth)
         // Move to the next part of Statements
         parseStatements(statementDelimiter + 1, depth + 1);
     }
-    else
-    {
-        printf("Error: ; not found\n");
-    }
+
 }
 
 void parseExpressionStatement(char *input, int depth)
