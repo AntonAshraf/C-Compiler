@@ -16,6 +16,7 @@ int main()
     // read input string from file
     char *str = 0;
     char fileName[] = "input.c";
+    FILE * foutput = fopen("Output.txt","w");
 
     if (readFile(fileName, str)){return 1;} // Error reading file
 
@@ -43,7 +44,7 @@ int main()
     {
         if (i == 0)
         {
-            printf("\nStack\tInput\tAction\n");
+            fprintf(foutput,"\nStack\t\t\t\t\tInput\tAction\n");
         }
 
         // If there are more characters in the input string, add the next character to the stack
@@ -53,12 +54,12 @@ int main()
             ch[1] = '\0';
             i++;
             strcat(stack, ch);
-            printf("%s\t", stack);
+            fprintf(foutput,"%s\t\t\t\t\t", stack);
             for (int k = i; k < strlen(input); k++)
             {
-                printf("%c", input[k]);
+                fprintf(foutput,"%c", input[k]);
             }
-            printf("\tShift %s\n", ch);
+            fprintf(foutput,"\tShift %s\n", ch);
         }
 
         // Iterate through the production rules
@@ -66,7 +67,6 @@ int main()
         {
             // Check if the right-hand side of the production rule matches a substring in the stack
             substring = strstr(stack, Rules[j].right);
-            // printf("Stack: %s, Rule: |%s|, Substring: |%s|\n", stack, Rules[j].right, substring);
             if (substring != NULL)
             {
                 // Replace the matched substring with the left-hand side of the production rule
@@ -75,12 +75,12 @@ int main()
                 stack_top = stack_length - substring_length;
                 stack[stack_top] = '\0';
                 strcat(stack, Rules[j].left);
-                printf("%s\t", stack);
+                fprintf(foutput,"%s\t\t\t\t\t", stack);
                 for (int k = i; k < strlen(input); k++)
                 {
-                    printf("%c", input[k]);
+                    fprintf(foutput,"%c", input[k]);
                 }
-                printf("\tReduce %s->%s\n", Rules[j].left, Rules[j].right);
+                fprintf(foutput,"\tReduce %s->%s\n", Rules[j].left, Rules[j].right);
                 j = -1; // Restart the loop to ensure immediate reduction of the newly derived production rule
             }
         }
@@ -88,14 +88,14 @@ int main()
         // Check if the stack contains only the start symbol and if the entire input string has been processed
         if (strcmp(stack, Rules[0].left) == 0 && i == strlen(input))
         {
-            printf("\nAccepted");
+            fprintf(foutput,"\nAccepted");
             break;
         }
 
         // Check if the entire input string has been processed but the stack doesn't match the start symbol
         if (i == strlen(input))
         {
-            printf("\nNot Accepted");
+            fprintf(foutput,"\nNot Accepted");
             break;
         }
     }
