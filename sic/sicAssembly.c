@@ -298,7 +298,7 @@ int PASS2()
 		j = strlen(operand);
 		if (op_status == 1 && operand[j - 1] == 'X' && operand[j - 2] == ',')
 		{
-			printf("CondnforBUFFER,X.");
+			// printf("CondnforBUFFER,X.");
 
 			operand[j - 2] = '\0';
 			rewind(fSymtab);
