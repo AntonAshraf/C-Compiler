@@ -23,20 +23,26 @@ void removeWhiteSpace(char *str);
 
 using namespace std;
 
-void remove_whitespace(char * str, void( * modify)(char * )) {
-  int i, j = 0;
-  for (i = 0; str[i] != '\0'; i++) {
-    if (!isspace(str[i])) {
-      str[j] = str[i];
-      j++;
-    } else {
-      modify( & str[i]);
+void remove_whitespace(char *str, void (*modify)(char *))
+{
+    int i, j = 0;
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        if (!isspace(str[i]))
+        {
+            str[j] = str[i];
+            j++;
+        }
+        else
+        {
+            modify(&str[i]);
+        }
     }
-  }
-  str[j] = '\0';
+    str[j] = '\0';
 }
-void remove_space(char * ch) {
-  * ch = '\0';
+void remove_space(char *ch)
+{
+    *ch = '\0';
 }
 int readFile(char *fname, char *&input)
 {
@@ -193,7 +199,17 @@ void parseWhileLoop(char *input, int depth)
 
     // Assuming 'while' '(' Expression ')' CompoundStatement
     char *start = strstr(input, "(");
+    if (start == NULL)
+    {
+        printf("Error: Start of while loop not found\n");
+        return;
+    }
     char *end = strstr(input, ")");
+    if (end == NULL)
+    {
+        printf("Error: End of while loop not found\n");
+        return;
+    }
     if (start && end)
     {
         // Extracting the Expression between '(' and ')'
@@ -203,6 +219,10 @@ void parseWhileLoop(char *input, int depth)
 
         parseExpression(expression, depth + 1);
     }
+    else
+    {
+        printf("Error: Start or End of while loop not found\n");
+    }
 
     // Move to the next part of the WhileLoop
     char *compoundStart = strstr(end, "{");
@@ -210,6 +230,10 @@ void parseWhileLoop(char *input, int depth)
     if (compoundStart)
     {
         parseCompoundStatement(compoundStart, depth + 1);
+    }
+    else
+    {
+        printf("Error: { not found\n");
     }
 }
 
@@ -239,10 +263,8 @@ void parseExpression(char *input, int depth)
 
             // ba send el batal3o
             parsenumOrIdentifier(left, depth + 1);
-            // parseIdentifiers(identifiers, depth + 1);
             parseoperator(operators[i], depth + 1);
             parsenumOrIdentifier(right, depth + 1);
-            // parseNumber(number, depth + 1);
             return; // Stop after parsing the first occurrence of an operator1
         }
     }
@@ -255,7 +277,18 @@ void parseCompoundStatement(char *input, int depth)
 
     // Assuming '{' Statements '}'
     char *statementsStart = strstr(input, "{");
+    if (statementsStart == NULL)
+    {
+        printf("Error: { not found\n");
+        return;
+    }
+
     char *statementsEnd = strstr(input, "}");
+    if (statementsEnd == NULL)
+    {
+        printf("Error: } not found\n");
+        return;
+    }
     if (statementsStart && statementsEnd)
     {
         // Extracting Statements between '{' and '}'
@@ -264,6 +297,10 @@ void parseCompoundStatement(char *input, int depth)
         statements[statementsEnd - statementsStart - 1] = '\0';
 
         parseStatements(statements, depth + 1);
+    }
+    else
+    {
+        printf("Error: { or } not found\n");
     }
     // 2.if()if wa7da ah aw wa7da la yab2aa error yab2a el curly brackets msh ma2fola
 }
@@ -289,6 +326,10 @@ void parseStatements(char *input, int depth)
 
         // Move to the next part of Statements
         parseStatements(statementDelimiter + 1, depth + 1);
+    }
+    else
+    {
+        printf("Error: ; not found\n");
     }
 }
 
@@ -356,12 +397,14 @@ void parsePrintStatement(char *input, int depth)
 
     // Assuming 'printf' '(' StringLiteral ', ' Identifier ')' ';'
     char *stringLiteralStart = strstr(input, "\"");
-    if (stringLiteralStart == NULL) {
+    if (stringLiteralStart == NULL)
+    {
         printf("Error: StringLiteralStart is null\n");
     }
 
     char *stringLiteralEnd = strstr(stringLiteralStart + 1, "\"");
-    if (stringLiteralEnd == NULL) {
+    if (stringLiteralEnd == NULL)
+    {
         printf("Error: StringLiteralEnd is null\n");
     }
 
@@ -374,15 +417,21 @@ void parsePrintStatement(char *input, int depth)
 
         parseStringLiteral(stringLiteral, depth + 1);
     }
+    else
+    {
+        printf("Error: StringLiteralStart or StringLiteralEnd is null\n");
+    }
 
     // Assuming ',' Identifier ')' ';'
     char *identifierStart = strstr(stringLiteralEnd + 1, ",");
-    if (identifierStart == NULL) {
+    if (identifierStart == NULL)
+    {
         printf("Error: IdentifierStart is null\n");
     }
 
     char *identifierEnd = strstr(identifierStart + 1, ")");
-    if (identifierEnd == NULL) {
+    if (identifierEnd == NULL)
+    {
         printf("Error: IdentifierEnd is null\n");
     }
 
@@ -395,14 +444,14 @@ void parsePrintStatement(char *input, int depth)
 
         parsenumOrIdentifier(identifier, depth + 1);
     }
-
-    // Print the semicolon
-    printIndent(depth + 1);
+    else
+    {
+        printf("Error: IdentifierStart or IdentifierEnd is null\n");
+    }
 }
 
 void parsenumOrIdentifier(char *input, int depth)
 {
-    // printf("%s",input);
     const char *tok = " ";
     input = strtok(input, tok);
     char first = input[0];
@@ -437,15 +486,24 @@ void parseNumber(char *input, int depth)
 void parseoperator(char *input, int depth)
 {
     printIndent(depth);
-    if (strcmp(input, "=") == 0) {
+    if (strcmp(input, "=") == 0)
+    {
         printf("assignment: %s\n", input);
-    } else if (strcmp(input, "++") == 0) {
+    }
+    else if (strcmp(input, "++") == 0)
+    {
         printf("increment: %s\n", input);
-    } else if (strcmp(input, "--") == 0) {
+    }
+    else if (strcmp(input, "--") == 0)
+    {
         printf("decrement: %s\n", input);
-    } else if (strcmp(input, ">=") == 0 || strcmp(input, "<=") == 0 || strcmp(input, "<") == 0 || strcmp(input, ">") == 0) {
+    }
+    else if (strcmp(input, ">=") == 0 || strcmp(input, "<=") == 0 || strcmp(input, "<") == 0 || strcmp(input, ">") == 0)
+    {
         printf("comparison: %s\n", input);
-    } else {
+    }
+    else
+    {
         printf("operator: %s\n", input);
     }
 }
