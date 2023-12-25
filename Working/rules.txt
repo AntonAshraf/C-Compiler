@@ -1,0 +1,15 @@
+Statement->WhileLoop
+Statement->ExpressionStatement
+Statement->PrintStatement
+WhileLoop->KeywordWhile(Expression)CompoundStatement
+Expression->ExpressionOperatorExpression
+Expression->idOrNum
+CompoundStatement->{Statements}
+CompoundStatement->{Statement}
+Statements->StatementsStatement
+Statements->StatementStatement
+Statement->Expression;
+PrintStatement->KeywordPrintf(StringLiteral);
+PrintStatement->KeywordPrintf(StringLiteral,Identifier);
+idOrNum->Identifier
+idOrNum->Number
