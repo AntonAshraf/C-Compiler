@@ -36,6 +36,27 @@ struct Token {
     size_t start;
     size_t end;
 };
+void remove_whitespace(char *str, void (*modify)(char *))
+{
+    int i, j = 0;
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        if (!isspace(str[i]))
+        {
+            str[j] = str[i];
+            j++;
+        }
+        else
+        {
+            modify(&str[i]);
+        }
+    }
+    str[j] = '\0';
+}
+void remove_space(char *ch)
+{
+    *ch = '\0';
+}
 
 string lexAndReplace(const string& input) {
     vector<Token> tokens;
@@ -160,8 +181,15 @@ string lexAndReplace(const string& input) {
 int main() {
     string input = "while (33<2){ i =x++ 5+--z;}";
     string output = lexAndReplace(input);
+    
+    char tmp[1000];
 
-    cout << output << '\n';
+    strcpy(tmp, output.c_str()); // Copying the content
+
+
+    remove_whitespace(tmp, remove_space);
+
+    cout << tmp << '\n';
 
     return 0;
 }
