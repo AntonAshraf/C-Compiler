@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-
 // Function prototypes
 void parseStatement(char *input, int depth);
 void parseWhileLoop(char *input, int depth);
@@ -16,36 +15,104 @@ void parseIdentifiers(char *input, int depth);
 void parseNumber(char *input, int depth);
 void parseoperator(char *input, int depth);
 void parseStringLiteral(char *input, int depth);
+int readFile(char *fname, char *&input);
 void parsenumOrIdentifier(char *input, int depth);
+void insertCharacters(char *input, char *result);
+void parseCFG(char *input, int depth);
+void removeWhiteSpace(char *str);
 
 using namespace std;
 
-int isWordCharacter(char c) {
+void remove_whitespace(char * str, void( * modify)(char * )) {
+  int i, j = 0;
+  for (i = 0; str[i] != '\0'; i++) {
+    if (!isspace(str[i])) {
+      str[j] = str[i];
+      j++;
+    } else {
+      modify( & str[i]);
+    }
+  }
+  str[j] = '\0';
+}
+void remove_space(char * ch) {
+  * ch = '\0';
+}
+int readFile(char *fname, char *&input)
+{
+    long length;
+    FILE *f = fopen(fname, "rb");
+    if (f)
+    {
+        fseek(f, 0, SEEK_END);
+        length = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        input = (char *)malloc(length + 5);
+        input[length] = '\0';
+
+        if (input)
+        {
+            fread(input, 1, length, f);
+            fclose(f);
+            return 0; // Success
+        }
+        else
+        {
+            printf("Failed to allocate memory for input.\n");
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("Failed to open file: %s\n", fname);
+    }
+    return 1; // Failure
+}
+
+int isWordCharacter(char c)
+{
     return isalpha(c) || c == '_';
 }
 
-void insertCharacters(char *input,char *result) {
+void insertCharacters(char *input, char *result)
+{
     // char result[500] = ""; // Adjust the size according to your needs
     int idx = 0;
     int len = strlen(input);
     int inPrintfString = 0;
+    int length;
 
-    for (int i = 0; i < len; ++i) {
-        if (strncmp(input + i, "printf(\"", 7) == 0) {
+    for (int i = 0; i < len; ++i)
+    {
+
+        if (strncmp(input + i, "printf(\"", 8) == 0)
+        {
+            length = 0;
+            while (input[i + length + 8] != '\"')
+            {
+                length++;
+            }
+
             inPrintfString = 1;
-            strcat(result, "printf(\""); // Copy 'printf(' without modification
-            idx += 7;
-            i += 6;
-        } else if (input[i] == '\"' && strncmp(input + i - 6, "printf(\"", 7) == 0) {
+            strcat(result, "printf(\""); // Copy 'printf(\"' without modification
+            idx += 8;
+            i += 8;
+        }
+        else if (input[i] == '\"' && strncmp(input + i - length - 8, "printf(\"", 8) == 0)
+        {
             inPrintfString = 0;
-            result[idx++] = '\"'; // Copy closing quote of printf string
+            // result[idx++] = '\"'; // Copy closing quote of printf string
         }
 
-        if (inPrintfString) {
+        if (inPrintfString)
+        {
             result[idx++] = input[i]; // Copy characters inside printf string
-        } else if (isWordCharacter(input[i])) {
+        }
+        else if (isWordCharacter(input[i]))
+        {
             int wordStart = i;
-            while (isWordCharacter(input[i])) {
+            while (isWordCharacter(input[i]))
+            {
                 ++i;
             }
             int wordEnd = i;
@@ -54,62 +121,81 @@ void insertCharacters(char *input,char *result) {
             strncpy(word, input + wordStart, wordEnd - wordStart);
             word[wordEnd - wordStart] = '\0';
 
-            if (strcmp(word, "while") == 0) {
+            if (strcmp(word, "while") == 0)
+            {
                 strcat(result, word); // Add 'while' without 'i'
                 idx += strlen(word);
-            } else {
+            }
+            else
+            {
                 result[idx++] = 'i'; // Insert 'i' before a word
                 strcat(result, word);
                 idx += strlen(word);
             }
             --i;
-        } else if (isdigit(input[i])) {
+        }
+        else if (isdigit(input[i]))
+        {
             result[idx++] = 'n'; // Insert 'n' before a number
-            while (isdigit(input[i])) {
+            while (isdigit(input[i]))
+            {
                 result[idx++] = input[i++];
             }
             --i;
-        } else {
+        }
+        else
+        {
             result[idx++] = input[i];
         }
     }
     result[idx] = '\0';
-    
-    // printf("Modified String: %s\n", result);
+
+    printf("Modified String: %s\n", result);
 }
 
 // Function to print indentation based on recursion depth
-void printIndent(int depth) {
-    for (int i = 0; i < depth; ++i) {
+void printIndent(int depth)
+{
+    for (int i = 0; i < depth; ++i)
+    {
         printf("  ");
     }
 }
 
 // Function to parse and display the recursive structure of the CFG
-void parseCFG(char *input, int depth) {
+void parseCFG(char *input, int depth)
+{
     parseStatement(input, depth);
 }
 
-void parseStatement(char *input, int depth) {
+void parseStatement(char *input, int depth)
+{
     printIndent(depth);
     printf("Statement\n");
-    if (strstr(input, "while") == input) {
+    if (strstr(input, "while") == input)
+    {
         parseWhileLoop(input, depth + 1);
-    } else if (strstr(input, "printf") == input) {
+    }
+    else if (strstr(input, "printf") == input)
+    {
         parsePrintStatement(input, depth + 1);
-    } else {
+    }
+    else
+    {
         parseExpressionStatement(input, depth + 1);
     }
 }
 
-void parseWhileLoop(char *input, int depth) {
+void parseWhileLoop(char *input, int depth)
+{
     printIndent(depth);
     printf("WhileLoop\n");
 
     // Assuming 'while' '(' Expression ')' CompoundStatement
     char *start = strstr(input, "(");
     char *end = strstr(input, ")");
-    if (start && end) {
+    if (start && end)
+    {
         // Extracting the Expression between '(' and ')'
         char expression[100];
         strncpy(expression, start + 1, end - start - 1);
@@ -120,34 +206,38 @@ void parseWhileLoop(char *input, int depth) {
 
     // Move to the next part of the WhileLoop
     char *compoundStart = strstr(end, "{");
-   
-    if (compoundStart) {
+
+    if (compoundStart)
+    {
         parseCompoundStatement(compoundStart, depth + 1);
     }
 }
 
-void parseExpression(char *input, int depth) {
+void parseExpression(char *input, int depth)
+{
     printIndent(depth);
-    //printf("salma: %s\n", input);
+    // printf("salma: %s\n", input);
     printf("Expression\n");
 
-    char *operators[] = { "<=",">=",">", "<", "==", "!=", "+", "-", "*", "/",NULL}; // List of supported operator1s
+    char *operators[] = {"<=", ">=", ">", "<", "==", "!=", "+", "-", "*", "/", NULL}; // List of supported operator1s
 
-    for (int i = 0; operators[i] != NULL; ++i) {
+    for (int i = 0; operators[i] != NULL; ++i)
+    {
         char *operator1 = strstr(input, operators[i]);
-        if (operator1) {
+        if (operator1)
+        {
             // Extracting Identifiers and Number
             size_t operatorLen = strlen(operators[i]);
             char left[50], right[50];
-          
-          //1.if condition hena ya2oly dah number wala la2a
-          
-            strncpy(left, input, operator1 - input); //llidentifier 
+
+            // 1.if condition hena ya2oly dah number wala la2a
+
+            strncpy(left, input, operator1 - input); // llidentifier
             left[operator1 - input] = '\0';
-            
-            strcpy(right, operator1 + operatorLen); //llnumber 
-           
-           //ba send el batal3o
+
+            strcpy(right, operator1 + operatorLen); // llnumber
+
+            // ba send el batal3o
             parsenumOrIdentifier(left, depth + 1);
             // parseIdentifiers(identifiers, depth + 1);
             parseoperator(operators[i], depth + 1);
@@ -158,39 +248,41 @@ void parseExpression(char *input, int depth) {
     }
 }
 
-void parseCompoundStatement(char *input, int depth) {
+void parseCompoundStatement(char *input, int depth)
+{
     printIndent(depth);
     printf("CompoundStatement\n");
 
     // Assuming '{' Statements '}'
     char *statementsStart = strstr(input, "{");
     char *statementsEnd = strstr(input, "}");
-    if (statementsStart && statementsEnd) {
+    if (statementsStart && statementsEnd)
+    {
         // Extracting Statements between '{' and '}'
         char statements[100];
         strncpy(statements, statementsStart + 1, statementsEnd - statementsStart - 1);
         statements[statementsEnd - statementsStart - 1] = '\0';
 
         parseStatements(statements, depth + 1);
-
     }
-    //2.if()if wa7da ah aw wa7da la yab2aa error yab2a el curly brackets msh ma2fola 
+    // 2.if()if wa7da ah aw wa7da la yab2aa error yab2a el curly brackets msh ma2fola
 }
 
-void parseStatements(char *input, int depth) {
+void parseStatements(char *input, int depth)
+{
     printIndent(depth);
     printf("Statements\n");
-//input:i++;printf(\"%d\\n\", i);ii=z3;
+    // input:i++;printf(\"%d\\n\", i);ii=z3;
 
     // Assuming Statement Statements | Îµ
     char *statementDelimiter = strstr(input, ";");
-    
-    
-    if (statementDelimiter) {
+
+    if (statementDelimiter)
+    {
         // Extracting the first Statement
         char statement[100];
         strncpy(statement, input, statementDelimiter - input);
-    
+
         statement[statementDelimiter - input] = '\0';
 
         parseStatement(statement, depth + 1);
@@ -200,76 +292,82 @@ void parseStatements(char *input, int depth) {
     }
 }
 
-// // void parseOtherStatement(char *input, int depth) {
-// //     printIndent(depth);
-// //     printf("OtherStatement\n");
-
-// //     // Placeholder: Assuming a simple rule for demonstration
-// //     // You need to replace this with the actual grammar rules for OtherStatement
-// //     char *identifier = strstr(input, "i");
-// //     if (identifier) {
-// //         parseExpressionStatement(identifier, depth + 1);
-// //     }
-
-//     // Add more conditions based on your grammar rules
-// }
-void parseExpressionStatement(char *input, int depth) {
+void parseExpressionStatement(char *input, int depth)
+{
     printIndent(depth);
     printf("Expression Statement\n");
 
     char *current = input;
-    while (*current != '\0') {
+    while (*current != '\0')
+    {
         // printf("%s\n",current);
-        if (*current == 'i' || *current == 'n') {
+        if (*current == 'i' || *current == 'n')
+        {
             char *start = current;
-            while (!ispunct(*current) && (isalnum(*current) || *current == '_')) {
+            while (!ispunct(*current) && (isalnum(*current) || *current == '_'))
+            {
                 current++;
             }
             int startsize = strlen(start);
             int currentsize = strlen(current);
             int len = startsize - currentsize;
             string s = start;
-            s = s.substr(0,len);
-            char* send = new char[s.length() + 1];
+            s = s.substr(0, len);
+            char *send = new char[s.length() + 1];
             strcpy(send, s.c_str());
-            
-            if (*start == 'i') {
+
+            if (*start == 'i')
+            {
                 parsenumOrIdentifier(send, depth + 1);
-                
-            } else {
-                parsenumOrIdentifier(start, depth + 1);
             }
-        } else if (ispunct(*current)) {
+            else
+            {
+                parsenumOrIdentifier(send, depth + 1);
+            }
+        }
+        else if (ispunct(*current))
+        {
             char *operatorz = current;
-            while (*current != '\0' && ispunct(*current)) {
+            while (*current != '\0' && ispunct(*current))
+            {
                 current++;
             }
             int startsize = strlen(operatorz);
             int currentsize = strlen(current);
             int len = startsize - currentsize;
             string s = operatorz;
-            s = s.substr(0,len);
-            char* send = new char[s.length() + 1];
+            s = s.substr(0, len);
+            char *send = new char[s.length() + 1];
             strcpy(send, s.c_str());
             parseoperator(send, depth + 1);
-        } else {
+        }
+        else
+        {
             current++;
         }
     }
 }
 
-    // Add more conditions based on your grammar rules
-
-
-void parsePrintStatement(char *input, int depth) {
+// Add more conditions based on your grammar rules
+void parsePrintStatement(char *input, int depth)
+{
     printIndent(depth);
     printf("PrintStatement\n");
 
     // Assuming 'printf' '(' StringLiteral ', ' Identifier ')' ';'
     char *stringLiteralStart = strstr(input, "\"");
+    if (stringLiteralStart == NULL) {
+        printf("Error: StringLiteralStart is null\n");
+    }
+
     char *stringLiteralEnd = strstr(stringLiteralStart + 1, "\"");
-    if (stringLiteralStart && stringLiteralEnd) {
-        // Extracting StringLiteral between '"' and '"'
+    if (stringLiteralEnd == NULL) {
+        printf("Error: StringLiteralEnd is null\n");
+    }
+
+    // Extracting StringLiteral between '"' and '"'
+    if (stringLiteralStart && stringLiteralEnd)
+    {
         char stringLiteral[100];
         strncpy(stringLiteral, stringLiteralStart + 1, stringLiteralEnd - stringLiteralStart - 1);
         stringLiteral[stringLiteralEnd - stringLiteralStart - 1] = '\0';
@@ -279,84 +377,81 @@ void parsePrintStatement(char *input, int depth) {
 
     // Assuming ',' Identifier ')' ';'
     char *identifierStart = strstr(stringLiteralEnd + 1, ",");
+    if (identifierStart == NULL) {
+        printf("Error: IdentifierStart is null\n");
+    }
+
     char *identifierEnd = strstr(identifierStart + 1, ")");
-    if (identifierStart && identifierEnd) {
-        // Extracting Identifier between ',' and ')'
+    if (identifierEnd == NULL) {
+        printf("Error: IdentifierEnd is null\n");
+    }
+
+    // Extracting Identifier between ',' and ')'
+    if (identifierStart && identifierEnd)
+    {
         char identifier[50];
         strncpy(identifier, identifierStart + 1, identifierEnd - identifierStart - 1);
         identifier[identifierEnd - identifierStart - 1] = '\0';
 
-        parseIdentifiers(identifier, depth + 1);
+        parsenumOrIdentifier(identifier, depth + 1);
     }
 
     // Print the semicolon
     printIndent(depth + 1);
 }
 
-void parsenumOrIdentifier(char *input, int depth) {
+void parsenumOrIdentifier(char *input, int depth)
+{
     // printf("%s",input);
-    const char* tok = " ";
-    input = strtok(input,tok);
+    const char *tok = " ";
+    input = strtok(input, tok);
     char first = input[0];
     char *rest = input + 1;
 
-    if (first == 'i') {
-        parseIdentifiers(rest,depth);
-    } else if (first == 'n') {
-        parseNumber(rest,depth);
-    } else {
+    if (first == 'i')
+    {
+        parseIdentifiers(rest, depth);
+    }
+    else if (first == 'n')
+    {
+        parseNumber(rest, depth);
+    }
+    else
+    {
         printf("The first character is neither 'i' nor 'n'.\n");
     }
 }
 
-void parseIdentifiers(char *input, int depth) {
+void parseIdentifiers(char *input, int depth)
+{
     printIndent(depth);
     printf("Identifiers: %s\n", input);
 }
 
-void parseNumber(char *input, int depth) {
+void parseNumber(char *input, int depth)
+{
     printIndent(depth);
     printf("Number: %s\n", input);
 }
 
-void parseoperator(char *input, int depth) {
+void parseoperator(char *input, int depth)
+{
     printIndent(depth);
-    printf("operator: %s\n", input);
+    if (strcmp(input, "=") == 0) {
+        printf("assignment: %s\n", input);
+    } else if (strcmp(input, "++") == 0) {
+        printf("increment: %s\n", input);
+    } else if (strcmp(input, "--") == 0) {
+        printf("decrement: %s\n", input);
+    } else if (strcmp(input, ">=") == 0 || strcmp(input, "<=") == 0 || strcmp(input, "<") == 0 || strcmp(input, ">") == 0) {
+        printf("comparison: %s\n", input);
+    } else {
+        printf("operator: %s\n", input);
+    }
 }
 
-void parseStringLiteral(char *input, int depth) {
+void parseStringLiteral(char *input, int depth)
+{
     printIndent(depth);
     printf("StringLiteral: %s\n", input);
-}
-void removeNewlines(char *str) {
-    if (str == NULL) {
-        return; // Handle null pointer
-    }
-
-    int length = strlen(str);
-    int readPos = 0;
-    int writePos = 0;
-
-    while (readPos < length) {
-        if (str[readPos] != '\n') {
-            str[writePos] = str[readPos];
-            writePos++;
-        }
-        readPos++;
-    }
-
-    str[writePos] = '\0'; // Null-terminate the new string
-}
-
-int main() {
-    char input[] = "while (ahmed < mohamed) {ahmed++;\nx=y* --z +2;printf(\"Mohamed\");i++;}";
-    
-    char result[200];
-    insertCharacters(input, result);
-    removeNewlines(result);
-    // printf("%s",result);
-    
-    parseCFG(result, 0);
-
-    return 0;
 }
