@@ -10,6 +10,6 @@ Statements->StatementsStatement
 Statements->StatementStatement
 Statement->Expression;
 PrintStatement->KeywordPrintf(StringLiteral);
-PrintStatement->KeywordPrintf(StringLiteral,Identifier);
+PrintStatement->KeywordPrintf(StringLiteral,Expression);
 idOrNum->Identifier
 idOrNum->Number

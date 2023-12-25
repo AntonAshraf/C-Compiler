@@ -36,6 +36,38 @@ struct Token {
     size_t start;
     size_t end;
 };
+
+int readFile(char *fname, char *&input)
+{
+    long length;
+    FILE *f = fopen(fname, "rb");
+    if (f)
+    {
+        fseek(f, 0, SEEK_END);
+        length = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        input = (char *)malloc(length + 5);
+        input[length] = '\0';
+
+        if (input)
+        {
+            fread(input, 1, length, f);
+            fclose(f);
+            return 0; // Success
+        }
+        else
+        {
+            printf("Failed to allocate memory for input.\n");
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("Failed to open file: %s\n", fname);
+    }
+    return 1; // Failure
+}
+
 void remove_whitespace(char *str, void (*modify)(char *))
 {
     int i, j = 0;
@@ -136,6 +168,7 @@ string lexAndReplace(const string& input) {
                 token = string(2, c);
                 currentType = (c == '+') ? TokenType::Increment : TokenType::Decrement;
                 ++i;
+                ++i;
             } else {
                 token = c;
                 currentType = TokenType::Operator;
@@ -169,7 +202,13 @@ string lexAndReplace(const string& input) {
     size_t offset = 0;
     for (const auto& token : tokens) {
         string replacement = tokenNames[token.type];
-        if (token.type != TokenType::Increment && token.type != TokenType::Unknown) {
+        if (token.type != TokenType::Increment && token.type != TokenType::Unknown && token.type != TokenType::Decrement) {
+            output.replace(token.start + offset, token.end - token.start, replacement);
+            offset += replacement.size() - (token.end - token.start);
+        } else if (token.type == TokenType::Increment) {
+            output.replace(token.start + offset, token.end - token.start, replacement);
+            offset += replacement.size() - (token.end - token.start);
+        }  else if (token.type == TokenType::Decrement) {
             output.replace(token.start + offset, token.end - token.start, replacement);
             offset += replacement.size() - (token.end - token.start);
         }
@@ -178,18 +217,4 @@ string lexAndReplace(const string& input) {
     return output;
 }
 
-int main() {
-    string input = "while (33<2){ i =x++ 5+--z;}";
-    string output = lexAndReplace(input);
-    
-    char tmp[1000];
 
-    strcpy(tmp, output.c_str()); // Copying the content
-
-
-    remove_whitespace(tmp, remove_space);
-
-    cout << tmp << '\n';
-
-    return 0;
-}

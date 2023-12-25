@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+#include "lexiLR.hpp"
 
+using namespace std;
 struct ProductionRule
 {
     char left[100];
@@ -8,18 +10,35 @@ struct ProductionRule
 } Rules[100];
 
 int ReadRules();
+string reduce(string str);
 
 int main()
 {
-    char input[200], stack[500], temp[500], ch[20], *token1, *token2, *substring;
+    // read input string from file
+    char *str = 0;
+    char fileName[] = "input.c";
+
+    if (readFile(fileName, str)){return 1;} // Error reading file
+
+    // string in1 = "while (33<2){ printf (\"fds\", x); x=2+3;}";
+    string output = lexAndReplace(str);
+    
+    char tmp[1000];
+
+    strcpy(tmp, output.c_str()); // Copying the content
+
+    remove_whitespace(tmp, remove_space);
+    // string t = reduce(tmp);
+    cout << tmp << '\n';
+
+    char input[2000], stack[500], temp[500], ch[20], *token1, *token2, *substring;
     int i, j, stack_length, substring_length, stack_top, rule_count;
 
     stack[0] = '\0';
 
     rule_count = ReadRules();
-    // User input for the input string
-    printf("\nEnter the input string: ");
-    scanf("%[^\n]s", input);
+
+    strcpy(input, tmp);
 
     i = 0;
     while (1)
@@ -142,4 +161,19 @@ int ReadRules()
         printf("Rule %d: |%s| -> |%s|\n", i + 1, Rules[i].left, Rules[i].right);
     }
     return ruleIndex;
+}
+
+string reduce(string str){
+    // if ++ or -- is found, replace it with Increment or Decrement
+    size_t pos;
+    // Replace "++" with "Increment"
+    while ((pos = str.find("++")) != std::string::npos) {
+        str.replace(pos, 2, "Increment");
+    }
+    // Replace "--" with "Decrement"
+    while ((pos = str.find("--")) != std::string::npos) {
+        str.replace(pos, 2, "Decrement");
+    }
+    return str;
+    
 }
